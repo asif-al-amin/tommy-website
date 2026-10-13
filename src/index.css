@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Chewy&family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --color-teal-900: #12393d;
+  --color-teal-800: #1b4d51;
+  --color-orange: #ef7f22;
+  --color-orange-soft: #fff3ea;
+  --color-cream: #fffdfa;
+  --color-ivory: #f7f2ec;
+  --color-muted: #6f8588;
+  --color-line: #edf0ee;
+  --font-nunito: 'Nunito', sans-serif;
+  --font-fredoka: 'Fredoka', sans-serif;
+  --font-chewy: 'Chewy', cursive;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-nunito);
+  background-color: var(--color-cream);
+  color: var(--color-teal-900);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}

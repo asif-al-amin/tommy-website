@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="AutetMart icon">
+  <defs>
+    <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#12393d" />
+      <stop offset="100%" stop-color="#0d2a2d" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#ef7f22" />
+      <stop offset="100%" stop-color="#f3a14f" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#bg)"/>
+  <path d="M36 38h18l11 16 11-16h18v52H76V68L64 81 52 68v22H36V38z" fill="url(#accent)"/>
+  <text x="64" y="92" text-anchor="middle" font-size="38" font-family="Arial, Helvetica, sans-serif" font-weight="800" fill="#ffffff" letter-spacing="1">AM</text>
+</svg>
