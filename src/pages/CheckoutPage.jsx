@@ -26,6 +26,28 @@ const billingFields = [
   { name: 'country', label: 'Country', type: 'text' },
 ];
 
+const initialShippingInfo = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  country: 'United States',
+};
+
+const initialBillingInfo = {
+  firstName: '',
+  lastName: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  country: 'United States',
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cart, getSubtotal, clearCart } = useCart();
@@ -45,28 +67,10 @@ const CheckoutPage = () => {
     import.meta.env.VITE_PAYPAL_CLIENT_ID ||
     'BAA2DwP5HbE87KcMP2oBx2LrQsc5kaH_k1jSjmg1jt4BuxXhuDhQcwF-TMldb8LcQut1bbYJP23_7o7j20';
 
-  const [shippingInfo, setShippingInfo] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
-  });
+  const [shippingInfo, setShippingInfo] = useState(initialShippingInfo);
 
   const [billingSame, setBillingSame] = useState(true);
-  const [billingInfo, setBillingInfo] = useState({
-    firstName: '',
-    lastName: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
-  });
+  const [billingInfo, setBillingInfo] = useState(initialBillingInfo);
 
   const [selectedPayment, setSelectedPayment] = useState('paypal');
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -271,6 +275,7 @@ const CheckoutPage = () => {
                         name={field.name}
                         value={shippingInfo[field.name]}
                         onChange={handleShippingChange}
+                        required
                         className={`w-full rounded-lg border-2 bg-[#fafbfa] py-3 px-4 outline-none transition-all ${
                           errors[field.name]
                             ? 'border-red-400 focus:border-red-500 focus:bg-white'
@@ -337,6 +342,7 @@ const CheckoutPage = () => {
                           name={field.name}
                           value={billingInfo[field.name]}
                           onChange={handleBillingChange}
+                          required
                           className={`w-full rounded-lg border-2 bg-[#fafbfa] py-3 px-4 outline-none transition-all ${
                             errors[field.name]
                               ? 'border-red-400 focus:border-red-500 focus:bg-white'

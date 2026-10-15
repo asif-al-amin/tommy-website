@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "download:products": "node scripts/download-product-images.mjs"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^10.6.0",
