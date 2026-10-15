@@ -1,22 +1,51 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Check, Package, Truck, CreditCard, CheckCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Truck, CreditCard, CheckCircle } from 'lucide-react';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { useCart } from '../context/CartContext';
+
+const shippingFields = [
+  { name: 'firstName', label: 'First Name', type: 'text' },
+  { name: 'lastName', label: 'Last Name', type: 'text' },
+  { name: 'email', label: 'Email Address', type: 'email' },
+  { name: 'phone', label: 'Phone Number', type: 'tel' },
+  { name: 'address', label: 'Street Address', type: 'text', fullWidth: true },
+  { name: 'city', label: 'City', type: 'text' },
+  { name: 'state', label: 'State/Province', type: 'text' },
+  { name: 'zipCode', label: 'ZIP/Postal Code', type: 'text' },
+  { name: 'country', label: 'Country', type: 'text' },
+];
+
+const billingFields = [
+  { name: 'firstName', label: 'First Name', type: 'text' },
+  { name: 'lastName', label: 'Last Name', type: 'text' },
+  { name: 'address', label: 'Street Address', type: 'text', fullWidth: true },
+  { name: 'city', label: 'City', type: 'text' },
+  { name: 'state', label: 'State/Province', type: 'text' },
+  { name: 'zipCode', label: 'ZIP/Postal Code', type: 'text' },
+  { name: 'country', label: 'Country', type: 'text' },
+];
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cart, getSubtotal, clearCart } = useCart();
+
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [paypalError, setPaypalError] = useState('');
+  const [paypalProcessing, setPaypalProcessing] = useState(false);
 
   const subtotal = getSubtotal();
-  const shipping = subtotal > 50 ? 0 : 10;
+  const freeShippingThreshold = 50;
+  const shipping = subtotal >= freeShippingThreshold ? 0 : 10;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
+  const paypalClientId =
+    import.meta.env.VITE_PAYPAL_CLIENT_ID ||
+    'BAA2DwP5HbE87KcMP2oBx2LrQsc5kaH_k1jSjmg1jt4BuxXhuDhQcwF-TMldb8LcQut1bbYJP23_7o7j20';
 
-  // Step 1 - Shipping Info
-  const [shipping_info, setShippingInfo] = useState({
+  const [shippingInfo, setShippingInfo] = useState({
     firstName: '',
     lastName: '',
     email: '',
@@ -28,9 +57,8 @@ const CheckoutPage = () => {
     country: '',
   });
 
-  // Step 2 - Billing Info
-  const [billing_same, setBillingSame] = useState(true);
-  const [billing_info, setBillingInfo] = useState({
+  const [billingSame, setBillingSame] = useState(true);
+  const [billingInfo, setBillingInfo] = useState({
     firstName: '',
     lastName: '',
     address: '',
@@ -40,64 +68,52 @@ const CheckoutPage = () => {
     country: '',
   });
 
-  // Step 3 - Payment (PayPal link)
   const [selectedPayment, setSelectedPayment] = useState('paypal');
   const [orderPlaced, setOrderPlaced] = useState(false);
 
   const handleShippingChange = (e) => {
     const { name, value } = e.target;
-    setShippingInfo((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setShippingInfo((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleBillingChange = (e) => {
     const { name, value } = e.target;
-    setBillingInfo((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setBillingInfo((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
   const validateShipping = () => {
     const newErrors = {};
-    if (!shipping_info.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!shipping_info.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!shipping_info.email.trim()) newErrors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shipping_info.email))
+    if (!shippingInfo.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!shippingInfo.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!shippingInfo.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shippingInfo.email)) {
       newErrors.email = 'Invalid email';
-    if (!shipping_info.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!shipping_info.address.trim()) newErrors.address = 'Address is required';
-    if (!shipping_info.city.trim()) newErrors.city = 'City is required';
-    if (!shipping_info.state.trim()) newErrors.state = 'State is required';
-    if (!shipping_info.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
-    if (!shipping_info.country.trim()) newErrors.country = 'Country is required';
+    }
+    if (!shippingInfo.phone.trim()) newErrors.phone = 'Phone is required';
+    if (!shippingInfo.address.trim()) newErrors.address = 'Address is required';
+    if (!shippingInfo.city.trim()) newErrors.city = 'City is required';
+    if (!shippingInfo.state.trim()) newErrors.state = 'State is required';
+    if (!shippingInfo.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
+    if (!shippingInfo.country.trim()) newErrors.country = 'Country is required';
     return newErrors;
   };
 
   const validateBilling = () => {
-    if (billing_same) return {};
+    if (billingSame) return {};
     const newErrors = {};
-    if (!billing_info.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!billing_info.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!billing_info.address.trim()) newErrors.address = 'Address is required';
-    if (!billing_info.city.trim()) newErrors.city = 'City is required';
-    if (!billing_info.state.trim()) newErrors.state = 'State is required';
-    if (!billing_info.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
-    if (!billing_info.country.trim()) newErrors.country = 'Country is required';
+    if (!billingInfo.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!billingInfo.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!billingInfo.address.trim()) newErrors.address = 'Address is required';
+    if (!billingInfo.city.trim()) newErrors.city = 'City is required';
+    if (!billingInfo.state.trim()) newErrors.state = 'State is required';
+    if (!billingInfo.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
+    if (!billingInfo.country.trim()) newErrors.country = 'Country is required';
     return newErrors;
   };
 
@@ -109,7 +125,10 @@ const CheckoutPage = () => {
       } else {
         setErrors(newErrors);
       }
-    } else if (step === 2) {
+      return;
+    }
+
+    if (step === 2) {
       const newErrors = validateBilling();
       if (Object.keys(newErrors).length === 0) {
         setStep(3);
@@ -121,7 +140,6 @@ const CheckoutPage = () => {
 
   const handlePayPalCheckout = () => {
     setLoading(true);
-    // Simulate order placement
     setTimeout(() => {
       setOrderPlaced(true);
       setStep(4);
@@ -132,6 +150,28 @@ const CheckoutPage = () => {
   const handleCompleteOrder = () => {
     clearCart();
     navigate('/');
+  };
+
+  const orderDescription = cart
+    .map((item) => `${item.name} (x${item.quantity})`)
+    .join(', ')
+    .slice(0, 120);
+
+  const handlePaypalApprove = async (data, actions) => {
+    try {
+      setPaypalProcessing(true);
+      setPaypalError('');
+      const order = await actions.order.capture();
+      console.log('PayPal payment successful:', order);
+      setOrderPlaced(true);
+      setStep(4);
+      clearCart();
+    } catch (error) {
+      console.error('PayPal capture failed:', error);
+      setPaypalError('Payment capture failed. Please try again.');
+    } finally {
+      setPaypalProcessing(false);
+    }
   };
 
   if (!cart || cart.length === 0) {
@@ -152,11 +192,17 @@ const CheckoutPage = () => {
 
   return (
     <div className="w-full bg-[#fffdfa] min-h-screen py-12 lg:py-16">
-      {/* Header */}
       <section className="border-b border-gray-100 bg-white px-4 py-8 sm:px-6 lg:px-10 mb-8">
         <div className="mx-auto max-w-7xl">
           <p className="mb-4 text-sm text-[#84a9ac]">
-            <Link to="/" className="hover:text-[#12393d]">Home</Link> / <Link to="/cart" className="hover:text-[#12393d]">Cart</Link> / <span className="font-bold text-[#12393d]">Checkout</span>
+            <Link to="/" className="hover:text-[#12393d]">
+              Home
+            </Link>{' '}
+            /{' '}
+            <Link to="/cart" className="hover:text-[#12393d]">
+              Cart
+            </Link>{' '}
+            / <span className="font-bold text-[#12393d]">Checkout</span>
           </p>
           <h1 className="text-4xl font-extrabold text-[#12393d] md:text-5xl">
             Secure Checkout
@@ -166,9 +212,7 @@ const CheckoutPage = () => {
 
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Main Checkout Form */}
           <div className="lg:col-span-2">
-            {/* Progress Steps */}
             <div className="mb-8 flex items-center justify-between">
               {[1, 2, 3, 4].map((s) => (
                 <React.Fragment key={s}>
@@ -194,7 +238,6 @@ const CheckoutPage = () => {
               ))}
             </div>
 
-            {/* Step Labels */}
             <div className="mb-10 grid grid-cols-4 gap-2 text-center text-sm">
               <div className={`font-bold ${step >= 1 ? 'text-[#12393d]' : 'text-[#567175]'}`}>
                 Shipping
@@ -210,7 +253,6 @@ const CheckoutPage = () => {
               </div>
             </div>
 
-            {/* Step 1: Shipping Information */}
             {step === 1 && (
               <div className="rounded-[24px] border border-[#edf0ee] bg-white p-8">
                 <h2 className="mb-6 text-2xl font-extrabold text-[#12393d] flex items-center gap-2">
@@ -219,28 +261,15 @@ const CheckoutPage = () => {
                 </h2>
 
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                  {[
-                    { name: 'firstName', label: 'First Name', type: 'text' },
-                    { name: 'lastName', label: 'Last Name', type: 'text' },
-                    { name: 'email', label: 'Email Address', type: 'email' },
-                    { name: 'phone', label: 'Phone Number', type: 'tel' },
-                    { name: 'address', label: 'Street Address', type: 'text', fullWidth: true },
-                    { name: 'city', label: 'City', type: 'text' },
-                    { name: 'state', label: 'State/Province', type: 'text' },
-                    { name: 'zipCode', label: 'ZIP/Postal Code', type: 'text' },
-                    { name: 'country', label: 'Country', type: 'text' },
-                  ].map((field) => (
-                    <div
-                      key={field.name}
-                      className={field.fullWidth ? 'sm:col-span-2' : ''}
-                    >
+                  {shippingFields.map((field) => (
+                    <div key={field.name} className={field.fullWidth ? 'sm:col-span-2' : ''}>
                       <label className="mb-2 block text-sm font-bold text-[#12393d]">
                         {field.label}
                       </label>
                       <input
                         type={field.type}
                         name={field.name}
-                        value={shipping_info[field.name]}
+                        value={shippingInfo[field.name]}
                         onChange={handleShippingChange}
                         className={`w-full rounded-lg border-2 bg-[#fafbfa] py-3 px-4 outline-none transition-all ${
                           errors[field.name]
@@ -274,7 +303,6 @@ const CheckoutPage = () => {
               </div>
             )}
 
-            {/* Step 2: Billing Information */}
             {step === 2 && (
               <div className="rounded-[24px] border border-[#edf0ee] bg-white p-8">
                 <h2 className="mb-6 text-2xl font-extrabold text-[#12393d]">
@@ -285,7 +313,7 @@ const CheckoutPage = () => {
                   <input
                     type="checkbox"
                     id="same_as_shipping"
-                    checked={billing_same}
+                    checked={billingSame}
                     onChange={(e) => {
                       setBillingSame(e.target.checked);
                       setErrors({});
@@ -297,28 +325,17 @@ const CheckoutPage = () => {
                   </label>
                 </div>
 
-                {!billing_same && (
+                {!billingSame && (
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                    {[
-                      { name: 'firstName', label: 'First Name', type: 'text' },
-                      { name: 'lastName', label: 'Last Name', type: 'text' },
-                      { name: 'address', label: 'Street Address', type: 'text', fullWidth: true },
-                      { name: 'city', label: 'City', type: 'text' },
-                      { name: 'state', label: 'State/Province', type: 'text' },
-                      { name: 'zipCode', label: 'ZIP/Postal Code', type: 'text' },
-                      { name: 'country', label: 'Country', type: 'text' },
-                    ].map((field) => (
-                      <div
-                        key={field.name}
-                        className={field.fullWidth ? 'sm:col-span-2' : ''}
-                      >
+                    {billingFields.map((field) => (
+                      <div key={field.name} className={field.fullWidth ? 'sm:col-span-2' : ''}>
                         <label className="mb-2 block text-sm font-bold text-[#12393d]">
                           {field.label}
                         </label>
                         <input
                           type={field.type}
                           name={field.name}
-                          value={billing_info[field.name]}
+                          value={billingInfo[field.name]}
                           onChange={handleBillingChange}
                           className={`w-full rounded-lg border-2 bg-[#fafbfa] py-3 px-4 outline-none transition-all ${
                             errors[field.name]
@@ -353,7 +370,6 @@ const CheckoutPage = () => {
               </div>
             )}
 
-            {/* Step 3: Payment Method */}
             {step === 3 && (
               <div className="rounded-[24px] border border-[#edf0ee] bg-white p-8">
                 <h2 className="mb-6 text-2xl font-extrabold text-[#12393d] flex items-center gap-2">
@@ -389,9 +405,66 @@ const CheckoutPage = () => {
 
                 <div className="rounded-lg bg-blue-50 p-4 mb-8 border border-blue-200">
                   <p className="text-sm text-blue-900">
-                    ℹ️ You'll be redirected to PayPal to complete your payment securely. Your order will be confirmed after successful payment.
+                    ℹ️ Use PayPal to pay with your account or card. The PayPal popup will securely collect your card details.
                   </p>
                 </div>
+
+                {selectedPayment === 'paypal' && (
+                  <div className="mb-8 rounded-xl border border-[#edf0ee] bg-white p-4">
+                    <PayPalScriptProvider
+                      options={{
+                        clientId: paypalClientId,
+                        currency: 'USD',
+                        intent: 'capture',
+                        'enable-funding': 'venmo,card',
+                      }}
+                    >
+                      <PayPalButtons
+                        style={{
+                          layout: 'vertical',
+                          color: 'gold',
+                          shape: 'rect',
+                          label: 'pay',
+                          height: 48,
+                        }}
+                        forceReRender={[total.toFixed(2), orderDescription]}
+                        createOrder={(data, actions) => {
+                          return actions.order.create({
+                            purchase_units: [
+                              {
+                                description: orderDescription || 'Tommy Website Purchase',
+                                amount: {
+                                  currency_code: 'USD',
+                                  value: total.toFixed(2),
+                                },
+                              },
+                            ],
+                          });
+                        }}
+                        onApprove={handlePaypalApprove}
+                        onError={(err) => {
+                          console.error('PayPal Checkout Error:', err);
+                          setPaypalError('Something went wrong with PayPal checkout. Please try again.');
+                        }}
+                        onCancel={() => {
+                          setPaypalError('Payment cancelled. Please try again if you want to continue.');
+                        }}
+                      />
+                    </PayPalScriptProvider>
+                  </div>
+                )}
+
+                {paypalError && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {paypalError}
+                  </div>
+                )}
+
+                {paypalProcessing && (
+                  <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+                    Processing your payment...
+                  </div>
+                )}
 
                 <div className="mt-8 flex justify-between gap-4">
                   <button
@@ -413,7 +486,6 @@ const CheckoutPage = () => {
               </div>
             )}
 
-            {/* Step 4: Order Confirmation */}
             {step === 4 && (
               <div className="rounded-[24px] border border-[#edf0ee] bg-white p-8 text-center">
                 <div className="mb-6 inline-block rounded-full bg-green-100 p-4">
@@ -429,7 +501,7 @@ const CheckoutPage = () => {
                 <div className="rounded-lg bg-[#f5f8f7] p-6 mb-8 text-left">
                   <p className="text-sm text-[#567175] mb-2">Order Number</p>
                   <p className="text-xl font-extrabold text-[#12393d] mb-4">
-                    #{Math.random().toString(36).substr(2, 9).toUpperCase()}
+                    #{Math.random().toString(36).slice(2, 11).toUpperCase()}
                   </p>
                   <hr className="my-4 border-[#e5eae8]" />
                   <p className="text-sm text-[#567175] mb-2">Total Amount</p>
@@ -439,7 +511,7 @@ const CheckoutPage = () => {
                 </div>
 
                 <p className="mb-8 text-[#567175]">
-                  A confirmation email has been sent to {shipping_info.email}
+                  A confirmation email has been sent to {shippingInfo.email}
                 </p>
 
                 <button
@@ -452,11 +524,9 @@ const CheckoutPage = () => {
             )}
           </div>
 
-          {/* Order Summary Sidebar */}
           <div className="h-fit rounded-[24px] border border-[#edf0ee] bg-white p-8 shadow-sm sticky top-4">
             <h3 className="mb-6 text-xl font-extrabold text-[#12393d]">Order Summary</h3>
 
-            {/* Cart Items */}
             <div className="mb-6 max-h-64 overflow-y-auto space-y-3">
               {cart.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">

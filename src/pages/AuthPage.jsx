@@ -19,6 +19,8 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [statusType, setStatusType] = useState('');
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [createdEmail, setCreatedEmail] = useState('');
 
   useEffect(() => {
     if (location.state?.mode === 'signup') {
@@ -30,7 +32,7 @@ const AuthPage = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+      if (user && user.emailVerified) {
         navigate('/');
       }
     });
@@ -54,6 +56,11 @@ const AuthPage = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  const resetStatus = () => {
+    setStatusMessage('');
+    setStatusType('');
+  };
 
   const handleSignInChange = (e) => {
     const { name, value } = e.target;
@@ -132,8 +139,7 @@ const AuthPage = () => {
     }
 
     setLoading(true);
-    setStatusMessage('');
-    setStatusType('');
+    resetStatus();
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, signInData.email, signInData.password);
@@ -166,13 +172,14 @@ const AuthPage = () => {
     }
 
     setLoading(true);
-    setStatusMessage('');
-    setStatusType('');
+    resetStatus();
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, signUpData.email, signUpData.password);
       await sendEmailVerification(userCredential.user);
 
+      setCreatedEmail(signUpData.email);
+      setVerificationSent(true);
       setStatusType('success');
       setStatusMessage('Account created successfully! A verification link has been sent to your email. Please verify before signing in.');
       setSignUpData({
@@ -182,7 +189,6 @@ const AuthPage = () => {
         confirmPassword: '',
         agreeTerms: false,
       });
-      setMode('signin');
       await signOut(auth);
     } catch (error) {
       setStatusType('error');
@@ -191,6 +197,67 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
+
+  if (verificationSent) {
+    return (
+      <div className="w-full bg-[#fffdfa] min-h-screen py-10 sm:py-16 lg:py-20">
+        <section className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[28px] border border-[#edf0ee] bg-white p-8 shadow-[0_12px_30px_rgba(18,57,61,0.04)] text-center sm:p-10">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#e7f5f1] text-[#12393d]">
+              <Mail className="h-8 w-8" />
+            </div>
+
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.12em] text-[#ef7f22]">
+              Verification Required
+            </p>
+
+            <h2 className="text-3xl font-extrabold text-[#12393d] sm:text-4xl">
+              Check your email
+            </h2>
+
+            <p className="mt-5 text-base leading-7 text-[#567175]">
+              Your account has been created successfully for{' '}
+              <span className="font-bold text-[#12393d]">{createdEmail || 'your email address'}</span>.
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-[#dfe9e8] bg-[#f7faf9] p-5 text-left">
+              <p className="text-base font-semibold text-[#12393d]">What to do next:</p>
+              <ul className="mt-3 space-y-2 text-sm leading-6 text-[#567175]">
+                <li>• Open your inbox and look for the confirmation email from us.</li>
+                <li>• If you do not see it, check your Spam or Junk folder.</li>
+                <li>• Click the verification link to activate your account.</li>
+              </ul>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setVerificationSent(false);
+                  setMode('signin');
+                  resetStatus();
+                }}
+                className="rounded-lg border border-[#c9d7d8] bg-white px-6 py-3 font-bold text-[#12393d] transition hover:bg-[#f5f8f7]"
+              >
+                Back to Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVerificationSent(false);
+                  setMode('signup');
+                  resetStatus();
+                }}
+                className="rounded-lg bg-[#ef7f22] px-6 py-3 font-bold text-white transition hover:bg-orange-600"
+              >
+                Create Another Account
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-[#fffdfa] min-h-screen py-10 sm:py-16 lg:py-20">
@@ -217,8 +284,8 @@ const AuthPage = () => {
               onClick={() => {
                 setMode('signin');
                 setErrors({});
-                setStatusMessage('');
-                setStatusType('');
+                resetStatus();
+                setVerificationSent(false);
               }}
               className={`flex-1 rounded-full py-3 px-4 font-bold transition-all ${
                 mode === 'signin'
@@ -232,8 +299,8 @@ const AuthPage = () => {
               onClick={() => {
                 setMode('signup');
                 setErrors({});
-                setStatusMessage('');
-                setStatusType('');
+                resetStatus();
+                setVerificationSent(false);
               }}
               className={`flex-1 rounded-full py-3 px-4 font-bold transition-all ${
                 mode === 'signup'

@@ -5,8 +5,12 @@ import { products } from '../data/products';
 
 const NewArrivals = () => {
   const newProducts = useMemo(() => {
-    return [...products]
-      .filter((product) => product.badge === 'New')
+    const withNewBadge = products.filter((product) => product.badge === 'New');
+    const fallbackPool = products.filter((product) => product.badge !== 'Best Seller');
+    const pool = withNewBadge.length > 0 ? withNewBadge : fallbackPool;
+
+    return [...pool]
+      .sort(() => Math.random() - 0.5)
       .slice(0, 4);
   }, []);
 

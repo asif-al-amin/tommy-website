@@ -5,8 +5,8 @@ const ProductGallery = ({ images, title }) => {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-[28px] border border-[#edf1f0] bg-[#f8f7f5] p-3">
-        <img src={activeImage} alt={title} className="h-[420px] w-full object-cover rounded-[20px]" />
+      <div className="overflow-hidden rounded-[28px] border border-[#edf1f0] bg-[#ffffff] p-3 shadow-[inset_0_0_0_1px_rgba(18,57,61,0.04)]">
+        <img src={activeImage} alt={title} className="h-[420px] w-full rounded-[20px] bg-[#ffffff] object-contain" />
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -19,7 +19,7 @@ const ProductGallery = ({ images, title }) => {
               activeImage === image ? 'border-[#ef7f22]' : 'border-transparent'
             }`}
           >
-            <img src={image} alt={`${title} ${index + 1}`} className="h-24 w-full object-cover" />
+            <img src={image} alt={`${title} ${index + 1}`} className="h-24 w-full object-contain bg-[#ffffff]" />
           </button>
         ))}
       </div>

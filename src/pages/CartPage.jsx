@@ -7,7 +7,9 @@ const CartPage = () => {
   const { cart, removeFromCart, updateQuantity, getSubtotal } = useCart();
 
   const subtotal = getSubtotal();
-  const shipping = subtotal > 50 ? 0 : 10;
+  const freeShippingThreshold = 50;
+  const shipping = subtotal >= freeShippingThreshold ? 0 : 10;
+  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
 
@@ -160,9 +162,13 @@ const CartPage = () => {
                   {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
                 </span>
               </div>
-              {shipping === 0 && (
-                <p className="text-sm text-[#12393d] bg-[#f5f8f7] p-2 rounded">
-                  ✓ Free shipping on orders over $50
+              {shipping === 0 ? (
+                <p className="rounded bg-[#f5f8f7] p-2 text-sm text-[#12393d]">
+                  ✓ Free shipping unlocked for this order
+                </p>
+              ) : (
+                <p className="rounded bg-[#f5f8f7] p-2 text-sm text-[#12393d]">
+                  Add ${remainingForFreeShipping.toFixed(2)} more for free shipping
                 </p>
               )}
               <div className="flex justify-between text-[#567175]">

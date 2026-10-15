@@ -17,12 +17,14 @@ const ProductCard = ({ product }) => {
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-[#eef0ee] bg-white shadow-[0_12px_30px_rgba(18,57,61,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(18,57,61,0.08)]">
       <Link to={`/product/${product.slug}`} className="block overflow-hidden rounded-t-[28px]">
-        <div className="relative overflow-hidden bg-[#f8f3ee]">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        <div className="relative overflow-hidden bg-[#ffffff]">
+          <div className="flex h-[290px] items-center justify-center bg-[#ffffff] p-4">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="max-h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </div>
           {product.badge && (
             <span className="absolute left-4 top-4 rounded-full bg-[#ef7f22] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
               {product.badge}
@@ -44,7 +46,7 @@ const ProductCard = ({ product }) => {
 
         <Link
           to={`/product/${product.slug}`}
-          className="mb-3 text-xl font-extrabold text-[#12393d] transition-colors hover:text-[#ef7f22]"
+          className="mb-3 line-clamp-2 text-xl font-extrabold text-[#12393d] transition-colors hover:text-[#ef7f22]"
           style={{ fontFamily: "'Fredoka', sans-serif" }}
         >
           {product.name}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Globe, Camera, Play, Send } from 'lucide-react';
+import { Globe, MessageCircle, MapPin } from 'lucide-react';
 import { categories } from '../data/categories';
 
 const shopLinks = [
@@ -30,10 +30,9 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { Icon: Globe, href: '#', label: 'Website' },
-    { Icon: Camera, href: '#', label: 'Instagram' },
-    { Icon: Play, href: '#', label: 'YouTube' },
-    { Icon: Send, href: '#', label: 'Twitter' },
+    { Icon: Globe, href: 'https://www.facebook.com/AutetMart/', label: 'Facebook', target: '_blank', rel: 'noopener noreferrer' },
+    { Icon: MessageCircle, href: 'https://wa.me/19412748287', label: 'WhatsApp', target: '_blank', rel: 'noopener noreferrer' },
+    { Icon: MapPin, href: 'https://maps.google.com/?q=3312+37th+St+W+Bradenton+FL+34205', label: 'Google Maps', target: '_blank', rel: 'noopener noreferrer' },
   ];
 
   return (
@@ -57,11 +56,29 @@ const Footer = () => {
               Your trusted partner for premium organic groceries and healthy lifestyle supplies. Delivering freshness since 2024.
             </p>
 
+            <div className="mb-6 space-y-3 text-sm text-[#d5e4e5]">
+              <a href="tel:+19412748287" className="flex items-center gap-2 hover:text-white transition-colors">
+                <span className="font-bold text-[#ef7f22]">☎</span>
+                <span>+1 941-274-8287</span>
+              </a>
+              <a
+                href="https://maps.google.com/?q=3312+37th+St+W+Bradenton+FL+34205"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-white transition-colors"
+              >
+                <span className="font-bold text-[#ef7f22]">📍</span>
+                <span>3312 37th St W, Bradenton, FL 34205</span>
+              </a>
+            </div>
+
             <div className="flex items-center gap-4">
-              {socialLinks.map(({ Icon, href, label }) => (
+              {socialLinks.map(({ Icon, href, label, target, rel }) => (
                 <a 
                   key={label}
-                  href={href} 
+                  href={href}
+                  target={target}
+                  rel={rel}
                   aria-label={label}
                   className="w-10 h-10 rounded-full border border-[#84a9ac] flex items-center justify-center text-[#84a9ac] hover:bg-[#ef7f22] hover:border-[#ef7f22] hover:text-white transition-all duration-300"
                 >
